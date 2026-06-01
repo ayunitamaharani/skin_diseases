@@ -209,10 +209,10 @@ c4.metric("Rasio M / F", f"{(df_f['gender']=='Male').sum()} / {(df_f['gender']==
 st.markdown("<div style='margin: 28px 0;'></div>", unsafe_allow_html=True)
 
 tab1, tab2, tab3, tab4 = st.tabs([
-    "P1  —  Distribusi & Demografi",
-    "P2  —  Karakteristik Klinis",
-    "P3  —  Kualitas Data",
-    "P4  —  Risiko Bias",
+    "Distribusi & Demografi",
+    "Karakteristik Klinis",
+    "Kualitas Data",
+    "Risiko Bias",
 ])
 
 def apply_layout(fig, **kwargs):
@@ -279,7 +279,7 @@ with tab1:
     status = "BALANCED" if balance_ratio >= 0.8 else "CUKUP BALANCED" if balance_ratio >= 0.5 else "IMBALANCED"
     minority_n = len(class_counts[class_counts["Jumlah"] < mean_count])
     st.info(f"""
-**Insight P1**
+**Insight**
 
 Balance ratio: **{balance_ratio:.2f}** — Status: **{status}**
 {minority_n} kelas berada di bawah rata-rata dan berpotensi underrepresented.
@@ -329,7 +329,7 @@ with tab2:
         st.plotly_chart(fig_svb, use_container_width=True)
 
     st.info("""
-**Insight P2**
+**Insight**
 
 Terdapat predileksi lokasi yang kuat per kelas — Acne dominan di Face/Back, Nail Fungus di Hands/Feet.
 Kelas kanker (Melanoma, SCC, BCC) didominasi severity Moderate–Severe.
@@ -382,7 +382,7 @@ with tab3:
         st.dataframe(summary, use_container_width=True, hide_index=True, height=420)
 
     st.info("""
-**Insight P3**
+**Insight**
 
 248 gambar duplikat dihapus (0.52% dari 48.000 data awal) — 154 exact copy dan 94 label error.
 Tidak ditemukan train-val leakage. Stratified split 70/15/15 menghasilkan selisih proporsi < 1% per kelas.
@@ -440,7 +440,7 @@ with tab4:
 
     top3 = df_risk.head(3)["Kelas"].tolist()
     st.info(f"""
-**Insight P4**
+**Insight**
 
 Top 3 kelas paling berisiko: **{', '.join(top3)}**
 Kelas dengan imbalance tinggi diprioritaskan untuk class weighting saat training.
