@@ -2,19 +2,173 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import numpy as np
 from scipy.stats import entropy
 
 # ── Page config ────────────────────────────────────────────
 st.set_page_config(
-    page_title="Skin Disease Dashboard",
-    page_icon="🔬",
+    page_title="Skin Disease — EDA Dashboard",
+    page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-# ── Load data ───────────────────────────────────────────────
+# ── Palette ─────────────────────────────────────────────────
+BURGUNDY   = "#6B2737"
+MAROON     = "#4A1520"
+WARM_RED   = "#8B3A4A"
+CREAM      = "#F5EFE6"
+CREAM_DARK = "#EDE4D8"
+SAND       = "#D4C5B0"
+BROWN_MID  = "#8B7355"
+CHARCOAL   = "#2C1810"
+MUTED_TEXT = "#7A6558"
+WHITE      = "#FDFAF7"
+
+# ── Custom CSS ───────────────────────────────────────────────
+st.markdown(f"""
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono&display=swap');
+
+  html, body, [class*="css"] {{
+    font-family: 'DM Sans', sans-serif;
+    background-color: {CREAM};
+    color: {CHARCOAL};
+  }}
+
+  .stApp {{
+    background-color: {CREAM};
+  }}
+
+  /* Sidebar */
+  [data-testid="stSidebar"] {{
+    background-color: {MAROON} !important;
+    border-right: 1px solid {BURGUNDY};
+  }}
+  [data-testid="stSidebar"] * {{
+    color: {CREAM} !important;
+  }}
+  [data-testid="stSidebar"] .stMultiSelect [data-baseweb="tag"] {{
+    background-color: {BURGUNDY} !important;
+  }}
+  [data-testid="stSidebar"] label {{
+    color: {SAND} !important;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    font-weight: 500 !important;
+  }}
+
+  /* Metric cards */
+  [data-testid="metric-container"] {{
+    background-color: {WHITE};
+    border: 1px solid {SAND};
+    border-radius: 8px;
+    padding: 20px 24px !important;
+  }}
+  [data-testid="metric-container"] label {{
+    color: {MUTED_TEXT} !important;
+    font-size: 0.7rem !important;
+    letter-spacing: 0.1em !important;
+    text-transform: uppercase !important;
+    font-weight: 500 !important;
+  }}
+  [data-testid="metric-container"] [data-testid="stMetricValue"] {{
+    color: {MAROON} !important;
+    font-family: 'Playfair Display', serif !important;
+    font-size: 1.8rem !important;
+  }}
+
+  /* Tabs */
+  .stTabs [data-baseweb="tab-list"] {{
+    background-color: transparent;
+    border-bottom: 1px solid {SAND};
+    gap: 0;
+  }}
+  .stTabs [data-baseweb="tab"] {{
+    color: {MUTED_TEXT};
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 500;
+    padding: 12px 24px;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+  }}
+  .stTabs [aria-selected="true"] {{
+    color: {BURGUNDY} !important;
+    border-bottom: 2px solid {BURGUNDY} !important;
+    background: transparent !important;
+  }}
+
+  /* Info/warning boxes */
+  .stAlert {{
+    background-color: {WHITE} !important;
+    border: 1px solid {SAND} !important;
+    border-left: 3px solid {BURGUNDY} !important;
+    border-radius: 6px !important;
+    color: {CHARCOAL} !important;
+  }}
+
+  /* Dataframe */
+  [data-testid="stDataFrame"] {{
+    border: 1px solid {SAND};
+    border-radius: 8px;
+  }}
+
+  /* Divider */
+  hr {{
+    border-color: {SAND} !important;
+    opacity: 0.5;
+  }}
+
+  /* Headings */
+  h1, h2, h3 {{
+    font-family: 'Playfair Display', serif !important;
+    color: {MAROON} !important;
+    letter-spacing: -0.02em;
+  }}
+
+  /* Caption / small text */
+  .stCaption, small {{
+    color: {MUTED_TEXT} !important;
+    font-size: 0.8rem !important;
+  }}
+
+  /* Plotly chart containers */
+  .js-plotly-plot {{
+    border-radius: 8px;
+  }}
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {{ width: 6px; }}
+  ::-webkit-scrollbar-track {{ background: {CREAM_DARK}; }}
+  ::-webkit-scrollbar-thumb {{ background: {SAND}; border-radius: 3px; }}
+</style>
+""", unsafe_allow_html=True)
+
+# ── Plotly theme ─────────────────────────────────────────────
+PLOT_LAYOUT = dict(
+    paper_bgcolor="rgba(0,0,0,0)",
+    plot_bgcolor=WHITE,
+    font=dict(family="DM Sans", color=CHARCOAL, size=12),
+    title_font=dict(family="Playfair Display", color=MAROON, size=15),
+    margin=dict(t=48, b=32, l=16, r=16),
+    xaxis=dict(gridcolor=CREAM_DARK, linecolor=SAND, tickcolor=SAND),
+    yaxis=dict(gridcolor=CREAM_DARK, linecolor=SAND, tickcolor=SAND),
+)
+
+WARM_SCALE = [
+    [0.0,  "#F5EFE6"],
+    [0.25, "#D4C5B0"],
+    [0.5,  "#8B7355"],
+    [0.75, "#8B3A4A"],
+    [1.0,  "#4A1520"],
+]
+
+BAR_COLORS = [BURGUNDY, WARM_RED, BROWN_MID, SAND, CREAM_DARK]
+
+# ── Load data ────────────────────────────────────────────────
 @st.cache_data
 def load_data():
     df = pd.read_csv("dataset/metadata_penyakit_kulit_cleaned.csv")
@@ -24,415 +178,348 @@ def load_data():
 
 df = load_data()
 
-# ── Sidebar filters ─────────────────────────────────────────
-st.sidebar.title("🔍 Filter Data")
+# ── Sidebar ──────────────────────────────────────────────────
+st.sidebar.markdown(f"""
+<div style='padding: 8px 0 20px 0;'>
+  <div style='font-family: Playfair Display, serif; font-size: 1.2rem; color: {CREAM}; letter-spacing: -0.01em;'>
+    Skin Disease
+  </div>
+  <div style='font-size: 0.7rem; color: {SAND}; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px;'>
+    EDA Dashboard
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
 all_classes = sorted(df["disease_name"].unique())
-selected_classes = st.sidebar.multiselect(
-    "Kelas Penyakit",
-    options=all_classes,
-    default=all_classes,
-)
-
+selected_classes = st.sidebar.multiselect("Kelas Penyakit", options=all_classes, default=all_classes)
 age_min, age_max = int(df["age"].min()), int(df["age"].max())
-age_range = st.sidebar.slider(
-    "Rentang Usia",
-    min_value=age_min,
-    max_value=age_max,
-    value=(age_min, age_max),
-)
+age_range = st.sidebar.slider("Rentang Usia", min_value=age_min, max_value=age_max, value=(age_min, age_max))
+selected_gender = st.sidebar.multiselect("Jenis Kelamin", options=["Male", "Female"], default=["Male", "Female"])
+selected_severity = st.sidebar.multiselect("Tingkat Keparahan", options=sorted(df["severity"].unique()), default=sorted(df["severity"].unique()))
 
-selected_gender = st.sidebar.multiselect(
-    "Jenis Kelamin",
-    options=["Male", "Female"],
-    default=["Male", "Female"],
-)
-
-selected_severity = st.sidebar.multiselect(
-    "Tingkat Keparahan",
-    options=sorted(df["severity"].unique()),
-    default=sorted(df["severity"].unique()),
-)
-
-# ── Apply filters ───────────────────────────────────────────
-df_filtered = df[
+# ── Filter ───────────────────────────────────────────────────
+df_f = df[
     (df["disease_name"].isin(selected_classes)) &
     (df["age"].between(age_range[0], age_range[1])) &
     (df["gender"].isin(selected_gender)) &
     (df["severity"].isin(selected_severity))
 ]
 
-# ── Header ──────────────────────────────────────────────────
-st.title("🔬 Dashboard EDA — Deteksi Penyakit Kulit")
-st.markdown("Eksplorasi data metadata pasien penyakit kulit berdasarkan **4 pertanyaan bisnis**.")
+# ── Header ───────────────────────────────────────────────────
+st.markdown(f"""
+<div style='padding: 32px 0 8px 0; border-bottom: 1px solid {SAND}; margin-bottom: 28px;'>
+  <div style='font-family: Playfair Display, serif; font-size: 2rem; color: {MAROON}; letter-spacing: -0.03em; line-height: 1.1;'>
+    Analisis Eksploratif Data<br>Penyakit Kulit
+  </div>
+  <div style='font-size: 0.82rem; color: {MUTED_TEXT}; margin-top: 10px; letter-spacing: 0.01em;'>
+    Eksplorasi metadata 2.300 pasien — distribusi, karakteristik klinis, kualitas data, dan risiko bias model.
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
-if len(df_filtered) == 0:
+if len(df_f) == 0:
     st.warning("Tidak ada data yang sesuai filter. Coba ubah filter di sidebar.")
     st.stop()
 
-# ── Metrics ─────────────────────────────────────────────────
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Total Pasien", f"{len(df_filtered):,}")
-col2.metric("Jumlah Kelas", df_filtered["disease_name"].nunique())
-col3.metric("Rata-rata Usia", f"{df_filtered['age'].mean():.1f} thn")
-col4.metric("Rasio Gender M/F",
-            f"{(df_filtered['gender']=='Male').sum()} / {(df_filtered['gender']=='Female').sum()}")
+# ── Metrics ──────────────────────────────────────────────────
+c1, c2, c3, c4 = st.columns(4)
+c1.metric("Total Pasien", f"{len(df_f):,}")
+c2.metric("Jumlah Kelas", df_f["disease_name"].nunique())
+c3.metric("Rata-rata Usia", f"{df_f['age'].mean():.1f} thn")
+c4.metric("Rasio M / F", f"{(df_f['gender']=='Male').sum()} / {(df_f['gender']=='Female').sum()}")
 
-st.divider()
+st.markdown("<div style='margin: 28px 0;'></div>", unsafe_allow_html=True)
 
-# ══════════════════════════════════════════════════════════════
-# TABS
-# ══════════════════════════════════════════════════════════════
+# ── Tabs ─────────────────────────────────────────────────────
 tab1, tab2, tab3, tab4 = st.tabs([
-    "📊 P1 — Distribusi & Demografi",
-    "🏥 P2 — Karakteristik Klinis",
-    "✅ P3 — Kualitas Data",
-    "⚠️ P4 — Risiko Bias",
+    "P1  —  Distribusi & Demografi",
+    "P2  —  Karakteristik Klinis",
+    "P3  —  Kualitas Data",
+    "P4  —  Risiko Bias",
 ])
 
-# ─────────────────────────────────────────────────────────────
-# TAB 1 — Distribusi kelas & demografi
-# ─────────────────────────────────────────────────────────────
-with tab1:
-    st.subheader("P1: Distribusi Kelas & Demografi Pasien")
-    st.caption("Apakah distribusi jumlah data pada 15 kelas penyakit kulit seimbang, dan bagaimana pola demografi pasien?")
+# helper
+def apply_layout(fig, **kwargs):
+    layout = {**PLOT_LAYOUT, **kwargs}
+    fig.update_layout(**layout)
+    return fig
 
-    # Distribusi kelas
-    class_counts = df_filtered["disease_name"].value_counts().reset_index()
+# ────────────────────────────────────────────────────────────
+# TAB 1
+# ────────────────────────────────────────────────────────────
+with tab1:
+    st.markdown(f"<div style='font-family: Playfair Display, serif; font-size: 1.2rem; color: {MAROON}; margin: 20px 0 4px;'>Distribusi Kelas & Demografi Pasien</div>", unsafe_allow_html=True)
+    st.caption("Apakah distribusi 15 kelas penyakit kulit seimbang, dan bagaimana pola demografi pasiennya?")
+    st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+
+    class_counts = df_f["disease_name"].value_counts().reset_index()
     class_counts.columns = ["Kelas", "Jumlah"]
     mean_count = class_counts["Jumlah"].mean()
+    class_counts["Status"] = class_counts["Jumlah"].apply(lambda x: "Di bawah rata-rata" if x < mean_count else "Di atas rata-rata")
 
-    class_counts["Warna"] = class_counts["Jumlah"].apply(
-        lambda x: "Di bawah rata-rata" if x < mean_count else "Di atas rata-rata"
-    )
-
-    fig_class = px.bar(
+    fig1 = px.bar(
         class_counts.sort_values("Jumlah"),
-        x="Jumlah", y="Kelas",
-        color="Warna",
-        color_discrete_map={"Di bawah rata-rata": "#e74c3c", "Di atas rata-rata": "#3498db"},
-        orientation="h",
-        title="Distribusi Jumlah Data per Kelas",
-        text="Jumlah",
+        x="Jumlah", y="Kelas", color="Status", orientation="h", text="Jumlah",
+        color_discrete_map={"Di bawah rata-rata": WARM_RED, "Di atas rata-rata": MAROON},
     )
-    fig_class.add_vline(x=mean_count, line_dash="dash", line_color="gray",
-                        annotation_text=f"Rata-rata ({mean_count:.0f})")
-    fig_class.update_traces(textposition="outside")
-    fig_class.update_layout(height=500, showlegend=True)
-    st.plotly_chart(fig_class, use_container_width=True)
+    fig1.add_vline(x=mean_count, line_dash="dot", line_color=SAND,
+                   annotation_text=f"rata-rata  {mean_count:.0f}", annotation_font_color=MUTED_TEXT)
+    fig1.update_traces(textposition="outside", textfont_size=10)
+    apply_layout(fig1, title="Jumlah Data per Kelas Penyakit", height=480, showlegend=True,
+                 legend=dict(orientation="h", y=-0.12, font=dict(size=11)))
+    st.plotly_chart(fig1, use_container_width=True)
 
     col_a, col_b = st.columns(2)
-
     with col_a:
-        # Distribusi usia
-        fig_age = px.histogram(
-            df_filtered, x="age",
-            nbins=30,
-            color_discrete_sequence=["#2bc4c3"],
-            title="Distribusi Usia Pasien",
-            labels={"age": "Usia (tahun)", "count": "Jumlah"},
-        )
-        fig_age.update_layout(bargap=0.05)
+        fig_age = px.histogram(df_f, x="age", nbins=28, color_discrete_sequence=[BURGUNDY])
+        fig_age.update_layout(bargap=0.06)
+        apply_layout(fig_age, title="Distribusi Usia Pasien",
+                     xaxis_title="Usia (tahun)", yaxis_title="Jumlah")
         st.plotly_chart(fig_age, use_container_width=True)
 
     with col_b:
-        # Distribusi gender
-        gender_counts = df_filtered["gender"].value_counts().reset_index()
-        gender_counts.columns = ["Gender", "Jumlah"]
-        fig_gender = px.pie(
-            gender_counts, names="Gender", values="Jumlah",
-            color_discrete_sequence=["#3498db", "#e74c3c"],
-            title="Proporsi Jenis Kelamin",
-            hole=0.4,
-        )
-        st.plotly_chart(fig_gender, use_container_width=True)
+        gc = df_f["gender"].value_counts().reset_index()
+        gc.columns = ["Gender", "Jumlah"]
+        fig_g = px.pie(gc, names="Gender", values="Jumlah", hole=0.45,
+                       color_discrete_sequence=[MAROON, SAND])
+        fig_g.update_traces(textinfo="label+percent", textfont_size=12)
+        apply_layout(fig_g, title="Proporsi Jenis Kelamin", showlegend=False)
+        st.plotly_chart(fig_g, use_container_width=True)
 
-    # Rata-rata usia per kelas
-    avg_age = df_filtered.groupby("disease_name")["age"].mean().reset_index()
-    avg_age.columns = ["Kelas", "Rata-rata Usia"]
-    avg_age = avg_age.sort_values("Rata-rata Usia", ascending=False)
+    avg_age = df_f.groupby("disease_name")["age"].mean().reset_index()
+    avg_age.columns = ["Kelas", "Usia"]
+    avg_age = avg_age.sort_values("Usia", ascending=False)
+    fig_aa = px.bar(avg_age, x="Kelas", y="Usia", text=avg_age["Usia"].round(1),
+                    color="Usia", color_continuous_scale=WARM_SCALE)
+    fig_aa.update_traces(textposition="outside", textfont_size=10)
+    apply_layout(fig_aa, title="Rata-rata Usia per Kelas", xaxis_tickangle=-40,
+                 height=400, coloraxis_showscale=False)
+    st.plotly_chart(fig_aa, use_container_width=True)
 
-    fig_age_class = px.bar(
-        avg_age, x="Kelas", y="Rata-rata Usia",
-        color="Rata-rata Usia",
-        color_continuous_scale="Blues",
-        title="Rata-rata Usia Pasien per Kelas Penyakit",
-        text=avg_age["Rata-rata Usia"].round(1),
-    )
-    fig_age_class.update_traces(textposition="outside")
-    fig_age_class.update_layout(xaxis_tickangle=-45, height=420)
-    st.plotly_chart(fig_age_class, use_container_width=True)
+    gcp = df_f.groupby(["disease_name", "gender"]).size().unstack(fill_value=0)
+    gcp = gcp.div(gcp.sum(axis=1), axis=0) * 100
+    fig_gs = go.Figure()
+    for g, col in zip(["Male", "Female"], [MAROON, SAND]):
+        if g in gcp.columns:
+            fig_gs.add_trace(go.Bar(name=g, x=gcp.index, y=gcp[g], marker_color=col))
+    fig_gs.update_layout(barmode="stack", xaxis_tickangle=-40, yaxis_title="Persentase (%)", height=400)
+    apply_layout(fig_gs, title="Proporsi Gender per Kelas (%)")
+    st.plotly_chart(fig_gs, use_container_width=True)
 
-    # Proporsi gender per kelas (stacked)
-    gender_class = df_filtered.groupby(["disease_name", "gender"]).size().unstack(fill_value=0)
-    gender_pct = gender_class.div(gender_class.sum(axis=1), axis=0) * 100
-    gender_pct = gender_pct.reset_index()
-
-    fig_gender_class = go.Figure()
-    for g, color in zip(["Male", "Female"], ["#3498db", "#e74c3c"]):
-        if g in gender_pct.columns:
-            fig_gender_class.add_trace(go.Bar(
-                name=g,
-                x=gender_pct["disease_name"],
-                y=gender_pct[g],
-                marker_color=color,
-            ))
-    fig_gender_class.update_layout(
-        barmode="stack",
-        title="Proporsi Gender per Kelas (%)",
-        xaxis_tickangle=-45,
-        yaxis_title="Persentase (%)",
-        height=420,
-    )
-    st.plotly_chart(fig_gender_class, use_container_width=True)
-
-    # Insight box
     balance_ratio = class_counts["Jumlah"].min() / class_counts["Jumlah"].max()
-    minority = class_counts[class_counts["Jumlah"] < mean_count]["Kelas"].tolist()
     status = "BALANCED" if balance_ratio >= 0.8 else "CUKUP BALANCED" if balance_ratio >= 0.5 else "IMBALANCED"
-
+    minority_n = len(class_counts[class_counts["Jumlah"] < mean_count])
     st.info(f"""
-**💡 Insight P1:**
-- Balance ratio dataset: **{balance_ratio:.2f}** → Status: **{status}**
-- **{len(minority)} kelas** berada di bawah rata-rata ({mean_count:.0f} data) dan berpotensi underrepresented
-- Kelas paling sedikit: **{class_counts.iloc[-1]['Kelas']}** ({class_counts.iloc[-1]['Jumlah']} data)
-- Pola usia konsisten: kelas kanker kulit (Melanoma, SCC) didominasi pasien lansia
+**Insight P1**
+
+Balance ratio: **{balance_ratio:.2f}** — Status dataset: **{status}**  
+{minority_n} kelas berada di bawah rata-rata dan berpotensi underrepresented.  
+Kelas paling sedikit: **{class_counts.sort_values('Jumlah').iloc[0]['Kelas']}** ({class_counts.sort_values('Jumlah').iloc[0]['Jumlah']} data).  
+Pola usia konsisten — kelas kanker kulit (Melanoma, SCC) didominasi pasien lansia.
     """)
 
 
-# ─────────────────────────────────────────────────────────────
-# TAB 2 — Karakteristik klinis
-# ─────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────
+# TAB 2
+# ────────────────────────────────────────────────────────────
 with tab2:
-    st.subheader("P2: Karakteristik Visual & Klinis per Kelas")
-    st.caption("Apakah terdapat perbedaan karakteristik klinis (lokasi tubuh & tingkat keparahan) antar kelas?")
+    st.markdown(f"<div style='font-family: Playfair Display, serif; font-size: 1.2rem; color: {MAROON}; margin: 20px 0 4px;'>Karakteristik Klinis per Kelas</div>", unsafe_allow_html=True)
+    st.caption("Perbedaan distribusi lokasi tubuh dan tingkat keparahan antar kelas penyakit.")
+    st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
     col_a, col_b = st.columns(2)
-
     with col_a:
-        # Heatmap body_part per kelas
-        bp_matrix = df_filtered.groupby(["disease_name", "body_part"]).size().unstack(fill_value=0)
-        bp_pct = bp_matrix.div(bp_matrix.sum(axis=1), axis=0) * 100
-
-        fig_bp = px.imshow(
-            bp_pct,
-            color_continuous_scale="Blues",
-            title="Distribusi Lokasi Tubuh per Kelas (%)",
-            labels={"x": "Bagian Tubuh", "y": "Kelas Penyakit", "color": "% Pasien"},
-            text_auto=".0f",
-            aspect="auto",
-        )
-        fig_bp.update_layout(height=500)
+        bp_m = df_f.groupby(["disease_name", "body_part"]).size().unstack(fill_value=0)
+        bp_pct = bp_m.div(bp_m.sum(axis=1), axis=0) * 100
+        fig_bp = px.imshow(bp_pct, color_continuous_scale=WARM_SCALE, text_auto=".0f", aspect="auto",
+                           labels={"color": "% Pasien"})
+        apply_layout(fig_bp, title="Lokasi Tubuh per Kelas (%)", height=520,
+                     xaxis_title="Bagian Tubuh", yaxis_title="")
         st.plotly_chart(fig_bp, use_container_width=True)
 
     with col_b:
-        # Heatmap severity per kelas
-        sev_order = ["Mild", "Moderate", "Severe", "Unknown"]
-        sev_cols = [s for s in sev_order if s in df_filtered["severity"].unique()]
-
-        sev_matrix = df_filtered.groupby(["disease_name", "severity"]).size().unstack(fill_value=0)
-        sev_matrix = sev_matrix.reindex(columns=sev_cols, fill_value=0)
-        sev_pct = sev_matrix.div(sev_matrix.sum(axis=1), axis=0) * 100
-
-        fig_sev = px.imshow(
-            sev_pct,
-            color_continuous_scale="YlOrRd",
-            title="Distribusi Tingkat Keparahan per Kelas (%)",
-            labels={"x": "Severity", "y": "Kelas Penyakit", "color": "% Pasien"},
-            text_auto=".0f",
-            aspect="auto",
-        )
-        fig_sev.update_layout(height=500)
+        sev_order = [s for s in ["Mild", "Moderate", "Severe", "Unknown"] if s in df_f["severity"].unique()]
+        sev_m = df_f.groupby(["disease_name", "severity"]).size().unstack(fill_value=0).reindex(columns=sev_order, fill_value=0)
+        sev_pct = sev_m.div(sev_m.sum(axis=1), axis=0) * 100
+        fig_sev = px.imshow(sev_pct, color_continuous_scale=WARM_SCALE, text_auto=".0f", aspect="auto",
+                            labels={"color": "% Pasien"})
+        apply_layout(fig_sev, title="Tingkat Keparahan per Kelas (%)", height=520,
+                     xaxis_title="Severity", yaxis_title="")
         st.plotly_chart(fig_sev, use_container_width=True)
 
-    # Body part overall
-    bp_overall = df_filtered["body_part"].value_counts().reset_index()
-    bp_overall.columns = ["Bagian Tubuh", "Jumlah"]
+    col_c, col_d = st.columns(2)
+    with col_c:
+        bp_ov = df_f["body_part"].value_counts().reset_index()
+        bp_ov.columns = ["Bagian Tubuh", "Jumlah"]
+        fig_bpb = px.bar(bp_ov, x="Bagian Tubuh", y="Jumlah", text="Jumlah",
+                         color="Jumlah", color_continuous_scale=WARM_SCALE)
+        fig_bpb.update_traces(textposition="outside", textfont_size=10)
+        apply_layout(fig_bpb, title="Distribusi Lokasi Gejala", height=360, coloraxis_showscale=False)
+        st.plotly_chart(fig_bpb, use_container_width=True)
 
-    fig_bp_bar = px.bar(
-        bp_overall, x="Bagian Tubuh", y="Jumlah",
-        color="Jumlah",
-        color_continuous_scale="Viridis",
-        title="Distribusi Keseluruhan Lokasi Gejala pada Tubuh",
-        text="Jumlah",
-    )
-    fig_bp_bar.update_traces(textposition="outside")
-    fig_bp_bar.update_layout(height=380)
-    st.plotly_chart(fig_bp_bar, use_container_width=True)
-
-    # Severity overall
-    sev_overall = df_filtered["severity"].value_counts().reset_index()
-    sev_overall.columns = ["Severity", "Jumlah"]
-
-    fig_sev_bar = px.bar(
-        sev_overall, x="Severity", y="Jumlah",
-        color="Severity",
-        color_discrete_map={"Mild": "#2ecc71", "Moderate": "#f39c12",
-                            "Severe": "#e74c3c", "Unknown": "#95a5a6"},
-        title="Distribusi Tingkat Keparahan Keseluruhan",
-        text="Jumlah",
-    )
-    fig_sev_bar.update_traces(textposition="outside")
-    fig_sev_bar.update_layout(height=380, showlegend=False)
-    st.plotly_chart(fig_sev_bar, use_container_width=True)
+    with col_d:
+        sv_ov = df_f["severity"].value_counts().reset_index()
+        sv_ov.columns = ["Severity", "Jumlah"]
+        fig_svb = px.bar(sv_ov, x="Severity", y="Jumlah", text="Jumlah",
+                         color="Severity",
+                         color_discrete_map={"Mild": SAND, "Moderate": WARM_RED,
+                                             "Severe": MAROON, "Unknown": BROWN_MID})
+        fig_svb.update_traces(textposition="outside", textfont_size=10)
+        apply_layout(fig_svb, title="Distribusi Tingkat Keparahan", height=360, showlegend=False)
+        st.plotly_chart(fig_svb, use_container_width=True)
 
     st.info("""
-**💡 Insight P2:**
-- Terdapat predileksi lokasi yang kuat per kelas — Acne dominan di Face/Back, Nail Fungus di Hands/Feet
-- Kelas kanker (Melanoma, SCC, BCC) didominasi severity Moderate–Severe
-- Perbedaan karakteristik klinis antar kelas cukup signifikan → metadata berguna sebagai fitur tambahan model
+**Insight P2**
+
+Terdapat predileksi lokasi yang kuat per kelas — Acne dominan di Face/Back, Nail Fungus di Hands/Feet.  
+Kelas kanker (Melanoma, SCC, BCC) didominasi severity Moderate–Severe.  
+Kombinasi fitur visual dan klinis memiliki komplementaritas tinggi untuk pemodelan multimodal.
     """)
 
 
-# ─────────────────────────────────────────────────────────────
-# TAB 3 — Kualitas data
-# ─────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────
+# TAB 3
+# ────────────────────────────────────────────────────────────
 with tab3:
-    st.subheader("P3: Konsistensi & Kualitas Dataset")
-    st.caption("Seberapa bersih dataset ini dan bagaimana kualitas distribusinya?")
+    st.markdown(f"<div style='font-family: Playfair Display, serif; font-size: 1.2rem; color: {MAROON}; margin: 20px 0 4px;'>Konsistensi & Kualitas Dataset</div>", unsafe_allow_html=True)
+    st.caption("Ringkasan hasil deduplication, distribusi statistik usia, dan proporsi kelas.")
+    st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
-    col_a, col_b, col_c = st.columns(3)
-    col_a.metric("Total Data Bersih", f"{len(df):,}")
-    col_b.metric("Duplikat Dihapus", "248", delta="-248", delta_color="inverse")
-    col_c.metric("Missing Values Sisa", int(df.isnull().sum().sum()))
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Total Data Bersih", f"{len(df):,}")
+    m2.metric("Duplikat Dihapus", "248")
+    m3.metric("Label Error", "94")
+    m4.metric("Train-Val Leakage", "0")
 
-    st.markdown("#### Distribusi Statistik Usia per Kelas")
+    st.markdown("<div style='margin: 8px 0;'></div>", unsafe_allow_html=True)
 
-    fig_box = px.box(
-        df_filtered, x="disease_name", y="age",
-        color="disease_name",
-        title="Boxplot Usia per Kelas Penyakit",
-        labels={"disease_name": "Kelas", "age": "Usia"},
-    )
-    fig_box.update_layout(xaxis_tickangle=-45, height=450, showlegend=False)
+    fig_box = px.box(df_f, x="disease_name", y="age", color="disease_name",
+                     color_discrete_sequence=[MAROON, BURGUNDY, WARM_RED, BROWN_MID,
+                                              SAND, "#C4A882", "#9B6B5A", "#7A4F3A",
+                                              "#5C3317", "#A0856C", "#D4B896", "#6B4C3B",
+                                              "#8C6B52", "#B8956A", "#E8D5B7"])
+    fig_box.update_layout(showlegend=False, xaxis_tickangle=-40)
+    apply_layout(fig_box, title="Distribusi Usia per Kelas (Boxplot)", height=440)
     st.plotly_chart(fig_box, use_container_width=True)
 
-    st.markdown("#### Proporsi Kelas di Dataset")
+    col_a, col_b = st.columns([1, 1])
+    with col_a:
+        cp = df_f["disease_name"].value_counts(normalize=True).reset_index()
+        cp.columns = ["Kelas", "Proporsi"]
+        cp["Persen"] = (cp["Proporsi"] * 100).round(2)
+        fig_pie = px.pie(cp, names="Kelas", values="Persen", hole=0.35,
+                         color_discrete_sequence=[
+                             MAROON, BURGUNDY, WARM_RED, BROWN_MID, SAND,
+                             "#C4A882", "#9B6B5A", "#7A4F3A", "#5C3317", "#A0856C",
+                             "#D4B896", "#6B4C3B", "#8C6B52", "#B8956A", "#E8D5B7"])
+        fig_pie.update_traces(textinfo="label+percent", textfont_size=10)
+        apply_layout(fig_pie, title="Proporsi Kelas (setelah filter)", height=460, showlegend=False)
+        st.plotly_chart(fig_pie, use_container_width=True)
 
-    class_pct = df_filtered["disease_name"].value_counts(normalize=True).reset_index()
-    class_pct.columns = ["Kelas", "Proporsi"]
-    class_pct["Proporsi %"] = (class_pct["Proporsi"] * 100).round(2)
-
-    fig_pie_class = px.pie(
-        class_pct, names="Kelas", values="Proporsi %",
-        title="Proporsi Setiap Kelas dalam Dataset (Setelah Filter)",
-        hole=0.3,
-    )
-    fig_pie_class.update_traces(textinfo="label+percent")
-    fig_pie_class.update_layout(height=500)
-    st.plotly_chart(fig_pie_class, use_container_width=True)
-
-    st.markdown("#### Tabel Ringkasan per Kelas")
-    summary = df_filtered.groupby("disease_name").agg(
-        Jumlah=("id_pasien", "count"),
-        Usia_Min=("age", "min"),
-        Usia_Max=("age", "max"),
-        Usia_Mean=("age", "mean"),
-    ).reset_index()
-    summary["Usia_Mean"] = summary["Usia_Mean"].round(1)
-    summary.columns = ["Kelas Penyakit", "Jumlah", "Usia Min", "Usia Maks", "Usia Rata-rata"]
-    st.dataframe(summary, use_container_width=True, hide_index=True)
+    with col_b:
+        summary = df_f.groupby("disease_name").agg(
+            Jumlah=("id_pasien", "count"),
+            Usia_Min=("age", "min"),
+            Usia_Max=("age", "max"),
+            Usia_Rata=("age", "mean"),
+        ).reset_index()
+        summary["Usia_Rata"] = summary["Usia_Rata"].round(1)
+        summary.columns = ["Kelas Penyakit", "Jumlah", "Usia Min", "Usia Maks", "Usia Rata-rata"]
+        summary = summary.sort_values("Jumlah", ascending=False)
+        st.markdown(f"<div style='font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:{MUTED_TEXT}; margin-bottom:10px;'>Ringkasan per Kelas</div>", unsafe_allow_html=True)
+        st.dataframe(summary, use_container_width=True, hide_index=True, height=420)
 
     st.info("""
-**💡 Insight P3:**
-- Proses deduplication berhasil menghapus **248 gambar duplikat** (0.52% dari 48.000 data awal)
-- Terdapat **94 label error** yang mengindikasikan inkonsistensi pelabelan di sumber dataset Kaggle
-- Tidak ditemukan train-val leakage sama sekali
-- Stratified split 70/15/15 menghasilkan proporsi kelas yang sangat konsisten (selisih < 1% per kelas)
+**Insight P3**
+
+248 gambar duplikat dihapus (0.52% dari 48.000 data awal) — terdiri dari 154 exact copy dan 94 label error.  
+Tidak ditemukan train-val leakage. Stratified split 70/15/15 menghasilkan selisih proporsi < 1% per kelas.
     """)
 
 
-# ─────────────────────────────────────────────────────────────
-# TAB 4 — Risiko Bias
-# ─────────────────────────────────────────────────────────────
+# ────────────────────────────────────────────────────────────
+# TAB 4
+# ────────────────────────────────────────────────────────────
 with tab4:
-    st.subheader("P4: Identifikasi Kelas Berisiko Bias")
-    st.caption("Kelas mana yang paling berisiko menyebabkan bias pada model berdasarkan kombinasi faktor?")
+    st.markdown(f"<div style='font-family: Playfair Display, serif; font-size: 1.2rem; color: {MAROON}; margin: 20px 0 4px;'>Identifikasi Kelas Berisiko Bias</div>", unsafe_allow_html=True)
+    st.caption("Kelas mana yang paling berisiko menyebabkan bias berdasarkan imbalance data, dominasi severity, dan variasi usia.")
+    st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
 
-    # Hitung risk score dari metadata
-    class_cnt = df_filtered["disease_name"].value_counts()
+    class_cnt = df_f["disease_name"].value_counts()
     max_cnt = class_cnt.max()
+    imbalance_risk = (1 - class_cnt / max_cnt)
 
-    # Faktor 1: Imbalance risk
-    imbalance_risk = (1 - class_cnt / max_cnt).rename("imbalance_risk")
-
-    # Faktor 2: Severity entropy risk
     def calc_entropy(grp):
         counts = grp.value_counts(normalize=True)
         return entropy(counts)
 
-    sev_ent = df_filtered.groupby("disease_name")["severity"].apply(calc_entropy)
+    sev_ent = df_f.groupby("disease_name")["severity"].apply(calc_entropy)
     max_ent = sev_ent.max()
-    severity_risk = (1 - sev_ent / max_ent).rename("severity_risk") if max_ent > 0 else sev_ent * 0
+    severity_risk = (1 - sev_ent / max_ent) if max_ent > 0 else sev_ent * 0
 
-    # Faktor 3: Age variance (low variance = less diverse = risk)
-    age_var = df_filtered.groupby("disease_name")["age"].std().fillna(0)
+    age_var = df_f.groupby("disease_name")["age"].std().fillna(0)
     max_var = age_var.max()
-    age_risk = (1 - age_var / max_var).rename("age_risk") if max_var > 0 else age_var * 0
+    age_risk = (1 - age_var / max_var) if max_var > 0 else age_var * 0
 
     df_risk = pd.concat([imbalance_risk, severity_risk, age_risk], axis=1).reset_index()
     df_risk.columns = ["Kelas", "Imbalance Data", "Dominasi Severity", "Variasi Usia Rendah"]
     df_risk["Risk Score"] = df_risk[["Imbalance Data", "Dominasi Severity", "Variasi Usia Rendah"]].mean(axis=1)
     df_risk = df_risk.sort_values("Risk Score", ascending=False).reset_index(drop=True)
 
-    def risk_label(score):
-        if score >= 0.6: return "🔴 Tinggi"
-        elif score >= 0.4: return "🟡 Sedang"
-        else: return "🟢 Rendah"
+    def risk_label(s):
+        if s >= 0.6: return "Tinggi"
+        elif s >= 0.4: return "Sedang"
+        return "Rendah"
 
-    df_risk["Level Risiko"] = df_risk["Risk Score"].apply(risk_label)
+    df_risk["Level"] = df_risk["Risk Score"].apply(risk_label)
 
     col_a, col_b = st.columns(2)
-
     with col_a:
-        fig_risk = px.bar(
+        fig_r = px.bar(
             df_risk.sort_values("Risk Score"),
-            x="Risk Score", y="Kelas",
-            color="Risk Score",
-            color_continuous_scale=["#2ecc71", "#f39c12", "#e74c3c"],
-            orientation="h",
-            title="Skor Risiko Bias per Kelas",
+            x="Risk Score", y="Kelas", orientation="h",
+            color="Risk Score", color_continuous_scale=WARM_SCALE,
             text=df_risk.sort_values("Risk Score")["Risk Score"].round(3),
         )
-        fig_risk.add_vline(x=0.4, line_dash="dash", line_color="#f39c12",
-                           annotation_text="Risiko Sedang")
-        fig_risk.add_vline(x=0.6, line_dash="dash", line_color="#e74c3c",
-                           annotation_text="Risiko Tinggi")
-        fig_risk.update_traces(textposition="outside")
-        fig_risk.update_layout(height=500)
-        st.plotly_chart(fig_risk, use_container_width=True)
+        fig_r.add_vline(x=0.4, line_dash="dot", line_color=SAND,
+                        annotation_text="sedang", annotation_font_color=MUTED_TEXT)
+        fig_r.add_vline(x=0.6, line_dash="dot", line_color=WARM_RED,
+                        annotation_text="tinggi", annotation_font_color=WARM_RED)
+        fig_r.update_traces(textposition="outside", textfont_size=10)
+        apply_layout(fig_r, title="Skor Risiko Bias per Kelas", height=500, coloraxis_showscale=False)
+        st.plotly_chart(fig_r, use_container_width=True)
 
     with col_b:
-        heatmap_data = df_risk.set_index("Kelas")[["Imbalance Data", "Dominasi Severity", "Variasi Usia Rendah"]]
-        fig_heat = px.imshow(
-            heatmap_data,
-            color_continuous_scale="YlOrRd",
-            title="Breakdown Faktor Risiko per Kelas",
-            labels={"color": "Skor (0–1)"},
-            text_auto=".2f",
-            aspect="auto",
-            zmin=0, zmax=1,
-        )
-        fig_heat.update_layout(height=500)
-        st.plotly_chart(fig_heat, use_container_width=True)
+        hm = df_risk.set_index("Kelas")[["Imbalance Data", "Dominasi Severity", "Variasi Usia Rendah"]]
+        fig_hm = px.imshow(hm, color_continuous_scale=WARM_SCALE, text_auto=".2f",
+                           aspect="auto", zmin=0, zmax=1, labels={"color": "Skor (0–1)"})
+        apply_layout(fig_hm, title="Breakdown Faktor Risiko", height=500)
+        st.plotly_chart(fig_hm, use_container_width=True)
 
-    st.markdown("#### 🏆 Ranking Risiko Bias")
+    st.markdown(f"<div style='font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:{MUTED_TEXT}; margin: 16px 0 8px;'>Ranking Lengkap</div>", unsafe_allow_html=True)
     st.dataframe(
-        df_risk[["Kelas", "Risk Score", "Imbalance Data", "Dominasi Severity",
-                 "Variasi Usia Rendah", "Level Risiko"]].round(3),
-        use_container_width=True,
-        hide_index=True,
+        df_risk[["Kelas", "Risk Score", "Imbalance Data", "Dominasi Severity", "Variasi Usia Rendah", "Level"]].round(3),
+        use_container_width=True, hide_index=True,
     )
 
     top3 = df_risk.head(3)["Kelas"].tolist()
-    st.warning(f"""
-**⚠️ Insight P4:**
-- Top 3 kelas paling berisiko: **{', '.join(top3)}**
-- Kelas dengan imbalance tinggi perlu diprioritaskan untuk **class weighting** saat training
-- Kelas dengan dominasi severity tinggi perlu dicek apakah distribusinya mencerminkan kondisi klinis nyata
-- Rekomendasi: terapkan augmentasi data pada kelas dengan risk score ≥ 0.4
+    st.info(f"""
+**Insight P4**
+
+Top 3 kelas paling berisiko: **{', '.join(top3)}**  
+Kelas dengan imbalance tinggi diprioritaskan untuk class weighting saat training.  
+Rekomendasi: terapkan augmentasi data pada kelas dengan risk score >= 0.4.
     """)
 
 # ── Footer ───────────────────────────────────────────────────
-st.divider()
-st.caption("📊 Dashboard EDA — Deteksi Penyakit Kulit | Data: metadata_penyakit_kulit_cleaned.csv")
+st.markdown(f"""
+<div style='margin-top: 48px; padding-top: 20px; border-top: 1px solid {SAND};
+     display: flex; justify-content: space-between; align-items: center;'>
+  <span style='font-size: 0.72rem; color: {MUTED_TEXT}; letter-spacing: 0.06em; text-transform: uppercase;'>
+    Skin Disease EDA Dashboard
+  </span>
+  <span style='font-size: 0.72rem; color: {SAND}; font-family: DM Mono, monospace;'>
+    dataset: metadata_penyakit_kulit_cleaned.csv — 2.300 pasien, 15 kelas
+  </span>
+</div>
+""", unsafe_allow_html=True)
