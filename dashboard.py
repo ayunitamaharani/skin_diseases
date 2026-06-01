@@ -30,22 +30,44 @@ st.markdown(f"""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono&display=swap');
 
-  html, body, [class*="css"] {{
-    font-family: 'DM Sans', sans-serif;
-    background-color: {CREAM};
-    color: {CHARCOAL};
+  /* Lock to light mode — ignore OS/browser dark mode */
+  :root {{
+    color-scheme: only light !important;
   }}
 
-  .stApp {{
+  html, body, [class*="css"], * {{
+    font-family: 'DM Sans', sans-serif;
     background-color: {CREAM};
+    color: {CHARCOAL} !important;
+  }}
+
+  .stApp, .stApp > * {{
+    background-color: {CREAM} !important;
+    color: {CHARCOAL} !important;
+  }}
+
+  /* Force all generic text elements */
+  p, span, div, label, li, td, th, a, small {{
+    color: {CHARCOAL} !important;
   }}
 
   /* Sidebar */
-  [data-testid="stSidebar"] {{
+  [data-testid="stSidebar"],
+  [data-testid="stSidebar"] > div {{
     background-color: {MAROON} !important;
-    border-right: 1px solid {BURGUNDY};
+    border-right: 1px solid {BURGUNDY} !important;
   }}
-  [data-testid="stSidebar"] * {{
+  [data-testid="stSidebar"] *,
+  [data-testid="stSidebar"] p,
+  [data-testid="stSidebar"] span,
+  [data-testid="stSidebar"] div,
+  [data-testid="stSidebar"] label {{
+    color: {CREAM} !important;
+    background-color: transparent !important;
+  }}
+  [data-testid="stSidebar"] [data-baseweb="select"] *,
+  [data-testid="stSidebar"] [data-baseweb="slider"] * {{
+    background-color: transparent !important;
     color: {CREAM} !important;
   }}
   [data-testid="stSidebar"] .stMultiSelect [data-baseweb="tag"] {{
@@ -61,19 +83,21 @@ st.markdown(f"""
 
   /* Metric cards */
   [data-testid="metric-container"] {{
-    background-color: {WHITE};
-    border: 1px solid {SAND};
-    border-radius: 8px;
+    background-color: {WHITE} !important;
+    border: 1px solid {SAND} !important;
+    border-radius: 8px !important;
     padding: 20px 24px !important;
   }}
-  [data-testid="metric-container"] label {{
+  [data-testid="metric-container"] label,
+  [data-testid="metric-container"] [data-testid="stMetricLabel"] * {{
     color: {MUTED_TEXT} !important;
     font-size: 0.7rem !important;
     letter-spacing: 0.1em !important;
     text-transform: uppercase !important;
     font-weight: 500 !important;
   }}
-  [data-testid="metric-container"] [data-testid="stMetricValue"] {{
+  [data-testid="metric-container"] [data-testid="stMetricValue"],
+  [data-testid="metric-container"] [data-testid="stMetricValue"] * {{
     color: {MAROON} !important;
     font-family: 'Playfair Display', serif !important;
     font-size: 1.8rem !important;
@@ -81,28 +105,30 @@ st.markdown(f"""
 
   /* Tabs */
   .stTabs [data-baseweb="tab-list"] {{
-    background-color: transparent;
-    border-bottom: 1px solid {SAND};
-    gap: 0;
+    background-color: transparent !important;
+    border-bottom: 1px solid {SAND} !important;
+    gap: 0 !important;
   }}
-  .stTabs [data-baseweb="tab"] {{
-    color: {MUTED_TEXT};
-    font-size: 0.78rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    font-weight: 500;
-    padding: 12px 24px;
-    border-bottom: 2px solid transparent;
-    background: transparent;
+  .stTabs [data-baseweb="tab"],
+  .stTabs [data-baseweb="tab"] * {{
+    color: {MUTED_TEXT} !important;
+    font-size: 0.78rem !important;
+    letter-spacing: 0.06em !important;
+    text-transform: uppercase !important;
+    font-weight: 500 !important;
+    padding: 12px 24px !important;
+    border-bottom: 2px solid transparent !important;
+    background: transparent !important;
   }}
-  .stTabs [aria-selected="true"] {{
+  .stTabs [aria-selected="true"],
+  .stTabs [aria-selected="true"] * {{
     color: {BURGUNDY} !important;
     border-bottom: 2px solid {BURGUNDY} !important;
     background: transparent !important;
   }}
 
-  /* Info/warning boxes */
-  .stAlert {{
+  /* Info/warning/alert boxes */
+  .stAlert, .stAlert *, [data-testid="stAlert"], [data-testid="stAlert"] * {{
     background-color: {WHITE} !important;
     border: 1px solid {SAND} !important;
     border-left: 3px solid {BURGUNDY} !important;
@@ -111,39 +137,44 @@ st.markdown(f"""
   }}
 
   /* Dataframe */
-  [data-testid="stDataFrame"] {{
-    border: 1px solid {SAND};
-    border-radius: 8px;
+  [data-testid="stDataFrame"],
+  [data-testid="stDataFrame"] * {{
+    border-color: {SAND} !important;
+    color: {CHARCOAL} !important;
+    background-color: {WHITE} !important;
   }}
 
   /* Divider */
   hr {{
     border-color: {SAND} !important;
-    opacity: 0.5;
+    opacity: 0.5 !important;
   }}
 
   /* Headings */
-  h1, h2, h3 {{
+  h1, h2, h3, h4, h5, h6 {{
     font-family: 'Playfair Display', serif !important;
     color: {MAROON} !important;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.02em !important;
   }}
 
-  /* Caption / small text */
-  .stCaption, small {{
+  /* Caption */
+  .stCaption, .stCaption *, [data-testid="stCaptionContainer"] * {{
     color: {MUTED_TEXT} !important;
     font-size: 0.8rem !important;
   }}
 
-  /* Plotly chart containers */
-  .js-plotly-plot {{
-    border-radius: 8px;
+  /* Markdown text */
+  [data-testid="stMarkdownContainer"],
+  [data-testid="stMarkdownContainer"] p,
+  [data-testid="stMarkdownContainer"] li,
+  [data-testid="stMarkdownContainer"] strong {{
+    color: {CHARCOAL} !important;
   }}
 
   /* Scrollbar */
-  ::-webkit-scrollbar {{ width: 6px; }}
-  ::-webkit-scrollbar-track {{ background: {CREAM_DARK}; }}
-  ::-webkit-scrollbar-thumb {{ background: {SAND}; border-radius: 3px; }}
+  ::-webkit-scrollbar {{ width: 6px !important; }}
+  ::-webkit-scrollbar-track {{ background: {CREAM_DARK} !important; }}
+  ::-webkit-scrollbar-thumb {{ background: {SAND} !important; border-radius: 3px !important; }}
 </style>
 """, unsafe_allow_html=True)
 
