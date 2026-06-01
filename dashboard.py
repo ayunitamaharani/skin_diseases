@@ -17,7 +17,7 @@ st.set_page_config(
 # ── Load data ───────────────────────────────────────────────
 @st.cache_data
 def load_data():
-    df = pd.read_csv("metadata_penyakit_kulit_cleaned.csv")
+    df = pd.read_csv("dataset/metadata_penyakit_kulit_cleaned.csv")
     df["disease_name"] = df["disease_name"].str.strip().str.title()
     df["severity"] = df["severity"].fillna("Unknown")
     return df
