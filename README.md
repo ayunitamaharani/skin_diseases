@@ -1,132 +1,132 @@
-# Skin Disease EDA Dashboard 
+# Skin Disease EDA Dashboard
 
-Dashboard interaktif untuk melakukan Exploratory Data Analysis (EDA) pada dataset metadata penyakit kulit. Dashboard ini dirancang untuk mengeksplorasi distribusi penyakit, karakteristik demografi pasien, kualitas dataset, serta potensi bias yang dapat memengaruhi performa model machine learning.
+An interactive dashboard for performing Exploratory Data Analysis (EDA) on a skin disease metadata dataset. This dashboard is designed to explore disease distributions, patient demographic characteristics, dataset quality, and potential biases that may affect machine learning model performance.
 
 ## Live Demo
 
-(https://skindiseases-capstone-project.streamlit.app/)
+https://skindiseases-capstone-project.streamlit.app/
 
 ---
 
 ## Overview
 
-Analisis data merupakan tahap penting sebelum membangun model klasifikasi penyakit kulit. Dashboard ini menyediakan berbagai visualisasi interaktif untuk memahami karakteristik dataset, mengevaluasi kualitas data, dan mengidentifikasi risiko bias yang dapat muncul selama proses pelatihan model.
+Data analysis is a crucial step before building a skin disease classification model. This dashboard provides various interactive visualizations to understand dataset characteristics, evaluate data quality, and identify potential biases that may arise during the model training process.
 
-Dataset yang digunakan terdiri dari metadata pasien penyakit kulit yang mencakup informasi usia, jenis kelamin, lokasi gejala, tingkat keparahan penyakit, dan kelas penyakit.
+The dataset consists of skin disease patient metadata, including information such as age, gender, symptom location, disease severity, and disease class.
 
-Dashboard dikembangkan menggunakan Streamlit dan Plotly sehingga memungkinkan eksplorasi data secara dinamis melalui filter interaktif.
-
----
-
-## Fitur
-
-- **Filter Interaktif** — Filter berdasarkan kelas penyakit, rentang usia, jenis kelamin, dan tingkat keparahan
-- **Distribusi Kelas Penyakit** — Visualisasi jumlah data pada masing-masing kelas penyakit
-- **Analisis Demografi** — Distribusi usia dan proporsi jenis kelamin pasien
-- **Karakteristik Klinis** — Heatmap lokasi gejala dan tingkat keparahan berdasarkan kelas penyakit
-- **Kualitas Dataset** — Ringkasan statistik dataset, distribusi kelas, dan boxplot usia
-- **Analisis Risiko Bias** — Identifikasi kelas yang berpotensi menyebabkan bias pada model machine learning
-- **Insight Otomatis** — Ringkasan hasil analisis pada setiap tab
+The dashboard is built using Streamlit and Plotly, allowing users to dynamically explore data through interactive filters.
 
 ---
 
-## Struktur Dashboard
+## Features
 
-### 1. Distribusi & Demografi
-
-Mengevaluasi:
-
-- Distribusi jumlah data per kelas penyakit
-- Distribusi usia pasien
-- Proporsi jenis kelamin
-- Rata-rata usia per kelas penyakit
-- Komposisi gender pada setiap kelas
-
-### 2. Karakteristik Klinis
-
-Menganalisis:
-
-- Distribusi lokasi gejala pada tubuh
-- Distribusi tingkat keparahan penyakit
-- Hubungan antara kelas penyakit dan karakteristik klinis
-
-### 3. Kualitas Dataset
-
-Menampilkan:
-
-- Statistik pembersihan data
-- Distribusi usia per kelas
-- Proporsi kelas setelah filtering
-- Ringkasan statistik setiap kelas penyakit
-
-### 4. Risiko Bias
-
-Mengukur risiko bias berdasarkan:
-
-- Ketidakseimbangan jumlah data (class imbalance)
-- Dominasi tingkat keparahan tertentu
-- Rendahnya variasi usia pasien
+* **Interactive Filters** — Filter data by disease class, age range, gender, and severity level
+* **Disease Class Distribution** — Visualization of the number of samples for each disease class
+* **Demographic Analysis** — Age distribution and gender proportion of patients
+* **Clinical Characteristics** — Symptom location heatmap and severity distribution by disease class
+* **Dataset Quality Assessment** — Dataset statistics, class distribution, and age boxplots
+* **Bias Risk Analysis** — Identification of classes that may introduce bias into machine learning models
+* **Automated Insights** — Summary of key findings for each dashboard tab
 
 ---
 
-## Metode
+## Dashboard Structure
 
-| Metode | Deskripsi |
-|----------|-----------|
-| **Exploratory Data Analysis (EDA)** | Analisis awal untuk memahami pola dan karakteristik data |
-| **Entropy Analysis** | Mengukur keberagaman distribusi tingkat keparahan pada setiap kelas |
-| **Risk Scoring** | Menghitung skor risiko bias berdasarkan beberapa faktor dataset |
-| **Class Imbalance Analysis** | Mengidentifikasi kelas dengan jumlah data yang tidak seimbang |
+### 1. Distribution & Demographics
+
+Evaluates:
+
+* Distribution of samples across disease classes
+* Patient age distribution
+* Gender proportions
+* Average age per disease class
+* Gender composition within each class
+
+### 2. Clinical Characteristics
+
+Analyzes:
+
+* Distribution of symptom locations on the body
+* Distribution of disease severity levels
+* Relationship between disease classes and clinical characteristics
+
+### 3. Dataset Quality
+
+Displays:
+
+* Data cleaning statistics
+* Age distribution by disease class
+* Class proportions after filtering
+* Statistical summary for each disease class
+
+### 4. Bias Risk Analysis
+
+Measures potential bias risks based on:
+
+* Class imbalance
+* Dominance of specific severity levels
+* Limited age diversity within classes
+
+---
+
+## Methods
+
+| Method                              | Description                                                              |
+| ----------------------------------- | ------------------------------------------------------------------------ |
+| **Exploratory Data Analysis (EDA)** | Initial analysis to understand data patterns and characteristics         |
+| **Entropy Analysis**                | Measures the diversity of severity level distributions within each class |
+| **Risk Scoring**                    | Calculates bias risk scores based on multiple dataset factors            |
+| **Class Imbalance Analysis**        | Identifies classes with imbalanced sample distributions                  |
 
 ---
 
 ## Dataset
 
-Dataset yang digunakan:
+Dataset used:
 
-```
+```text
 dataset/
 └── metadata_penyakit_kulit_cleaned.csv
 ```
 
-Variabel utama yang digunakan:
+Main variables:
 
-| Variabel | Deskripsi |
-|-----------|-----------|
-| id_pasien | ID unik pasien |
-| disease_name | Nama penyakit kulit |
-| age | Usia pasien |
-| gender | Jenis kelamin pasien |
-| body_part | Lokasi gejala pada tubuh |
-| severity | Tingkat keparahan penyakit |
-
----
-
-## Insight yang Dihasilkan
-
-Dashboard membantu mengidentifikasi:
-
-- Kelas penyakit yang underrepresented
-- Distribusi usia dan gender pasien
-- Pola lokasi gejala pada setiap penyakit
-- Distribusi tingkat keparahan penyakit
-- Potensi bias akibat class imbalance
-- Kelas yang membutuhkan augmentasi data atau class weighting saat training model
+| Variable     | Description                  |
+| ------------ | ---------------------------- |
+| id_pasien    | Unique patient ID            |
+| disease_name | Skin disease name            |
+| age          | Patient age                  |
+| gender       | Patient gender               |
+| body_part    | Symptom location on the body |
+| severity     | Disease severity level       |
 
 ---
 
-## Tech Stack yang Digunakan
+## Generated Insights
 
-- Python
-- Streamlit
-- Pandas
-- NumPy
-- Plotly
-- SciPy
+The dashboard helps identify:
+
+* Underrepresented disease classes
+* Patient age and gender distributions
+* Symptom location patterns for each disease
+* Disease severity distributions
+* Potential bias caused by class imbalance
+* Classes that may require data augmentation or class weighting during model training
 
 ---
 
-## Setup Lokal
+## Technology Stack
+
+* Python
+* Streamlit
+* Pandas
+* NumPy
+* Plotly
+* SciPy
+
+---
+
+## Local Setup
 
 ```bash
 git clone https://github.com/ayunitamaharani/skin_diseases.git
@@ -140,7 +140,7 @@ streamlit run dashboard.py
 
 ---
 
-## Struktur Project
+## Project Structure
 
 ```text
 skin_diseases/
