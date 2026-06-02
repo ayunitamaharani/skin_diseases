@@ -1,0 +1,3 @@
+Link dataset yang digunakan:
+
+https://www.kaggle.com/datasets/mgmitesh/skin-disease-detection-dataset/data
