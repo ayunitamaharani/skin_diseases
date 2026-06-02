@@ -191,7 +191,7 @@ st.markdown(f"""
     Analisis Eksploratif Data<br>Penyakit Kulit
   </div>
   <div style='font-size: 0.82rem; color: {MUTED_TEXT}; margin-top: 10px;'>
-    Eksplorasi metadata 2.300 pasien — distribusi, karakteristik klinis, kualitas data, dan risiko bias model.
+    Eksplorasi metadata 2.300 pasien mulai dari distribusi, karakteristik klinis, kualitas data, dan risiko bias model.
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -281,9 +281,9 @@ with tab1:
     st.info(f"""
 **Insight**
 
-Balance ratio: **{balance_ratio:.2f}**, Status: **{status}**
+Balance ratio: {balance_ratio:.2f}, Status: {status}
 {minority_n} kelas berada di bawah rata-rata dan berpotensi underrepresented.
-Kelas paling sedikit: **{class_counts.sort_values('Jumlah').iloc[0]['Kelas']}** ({class_counts.sort_values('Jumlah').iloc[0]['Jumlah']} data).
+Kelas paling sedikit: {class_counts.sort_values('Jumlah').iloc[0]['Kelas']} ({class_counts.sort_values('Jumlah').iloc[0]['Jumlah']} data).
 Pola usia konsisten, lalu kelas kanker kulit (Melanoma, SCC) didominasi pasien lansia.
     """)
 
@@ -442,7 +442,7 @@ with tab4:
     st.info(f"""
 **Insight**
 
-Top 3 kelas paling berisiko: **{', '.join(top3)}**
+Top 3 kelas paling berisiko: {', '.join(top3)}
 Kelas dengan imbalance tinggi diprioritaskan untuk class weighting saat training.
 Rekomendasi: terapkan augmentasi data pada kelas dengan risk score >= 0.4.
     """)
