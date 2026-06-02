@@ -400,11 +400,11 @@ with tab3:
     st.info(f"""
 **Insight**
 
-Dataset setelah filter memiliki **{len(df_f):,} pasien** di **{df_f['disease_name'].nunique()} kelas**.
-Kelas terbesar: **{largest_cls}** ({largest_n} data), terkecil: **{smallest_cls}** ({smallest_n} data) — rasio {ratio_tab3:.2f} ({status_tab3}).
+Dataset setelah filter memiliki {len(df_f):,} pasien di {df_f['disease_name'].nunique()} kelas.
+Kelas terbesar: {largest_cls} ({largest_n} data), terkecil: {smallest_cls} ({smallest_n} data) — rasio {ratio_tab3:.2f} ({status_tab3}).
 
-Distribusi usia: **{oldest_cls}** memiliki rata-rata usia tertinggi ({oldest_avg:.1f} thn), **{youngest_cls}** terendah ({youngest_avg:.1f} thn).
-Kelas **{widest_cls}** memiliki rentang usia paling lebar, mengindikasikan penyakit ini menyerang lintas kelompok umur.
+Distribusi usia: {oldest_cls} memiliki rata-rata usia tertinggi ({oldest_avg:.1f} thn), {youngest_cls} terendah ({youngest_avg:.1f} thn).
+Kelas {widest_cls} memiliki rentang usia paling lebar, mengindikasikan penyakit ini menyerang lintas kelompok umur.
 
 Proses cleaning: 248 duplikat dihapus (154 exact copy + 94 label error). Tidak ditemukan train-val leakage — stratified split 70/15/15 dengan selisih proporsi < 1% per kelas.
     """)
