@@ -70,8 +70,8 @@ Ensure your computer has Python 3.9+ and Git installed.
 2. Create a Virtual Environment
   - python -m venv env
 3. Activate the Virtual Environment
-  for windows : env\Scripts\activate
-  for Linux/Mac: source env/bin/activate
+  - for windows : env\Scripts\activate
+  - for Linux/Mac: source env/bin/activate
 4. Install Library Dependencies
   - python -m pip install --upgrade pip
   - pip install -r requirements.txt
