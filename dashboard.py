@@ -281,10 +281,10 @@ with tab1:
     st.info(f"""
 **Insight**
 
-Balance ratio: **{balance_ratio:.2f}** — Status: **{status}**
+Balance ratio: **{balance_ratio:.2f}**, Status: **{status}**
 {minority_n} kelas berada di bawah rata-rata dan berpotensi underrepresented.
 Kelas paling sedikit: **{class_counts.sort_values('Jumlah').iloc[0]['Kelas']}** ({class_counts.sort_values('Jumlah').iloc[0]['Jumlah']} data).
-Pola usia konsisten — kelas kanker kulit (Melanoma, SCC) didominasi pasien lansia.
+Pola usia konsisten, lalu kelas kanker kulit (Melanoma, SCC) didominasi pasien lansia.
     """)
 
 # ── TAB 2 ────────────────────────────────────────────────────
@@ -331,7 +331,7 @@ with tab2:
     st.info("""
 **Insight**
 
-Terdapat predileksi lokasi yang kuat per kelas — Acne dominan di Face/Back, Nail Fungus di Hands/Feet.
+Terdapat predileksi lokasi yang kuat per kelas, untuk kelas Acne dominan di Face/Back, Nail Fungus di Hands/Feet.
 Kelas kanker (Melanoma, SCC, BCC) didominasi severity Moderate–Severe.
 Kombinasi fitur visual dan klinis memiliki komplementaritas tinggi untuk pemodelan multimodal.
     """)
@@ -384,7 +384,7 @@ with tab3:
     st.info("""
 **Insight**
 
-248 gambar duplikat dihapus (0.52% dari 48.000 data awal) — 154 exact copy dan 94 label error.
+248 gambar duplikat dihapus (0.52% dari 48.000 data awal) yang berisi 154 exact copy dan 94 label error.
 Tidak ditemukan train-val leakage. Stratified split 70/15/15 menghasilkan selisih proporsi < 1% per kelas.
     """)
 
