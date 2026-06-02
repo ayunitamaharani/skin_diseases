@@ -381,11 +381,32 @@ with tab3:
         st.markdown(f"<div style='font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:{MUTED_TEXT}; margin-bottom:10px;'>Ringkasan per Kelas</div>", unsafe_allow_html=True)
         st.dataframe(summary, use_container_width=True, hide_index=True, height=420)
 
-    st.info("""
+# ── Dynamic insight Tab 3 ──────────────────────────────────
+    largest_cls  = summary.iloc[0]["Kelas Penyakit"]
+    largest_n    = summary.iloc[0]["Jumlah"]
+    smallest_cls = summary.iloc[-1]["Kelas Penyakit"]
+    smallest_n   = summary.iloc[-1]["Jumlah"]
+    ratio_tab3   = round(smallest_n / largest_n, 2)
+
+    age_range_per_class = summary["Usia Maks"] - summary["Usia Min"]
+    widest_cls  = summary.loc[age_range_per_class == age_range_per_class.max(), "Kelas Penyakit"].values[0]
+    oldest_cls  = summary.loc[summary["Usia Rata-rata"] == summary["Usia Rata-rata"].max(), "Kelas Penyakit"].values[0]
+    oldest_avg  = summary["Usia Rata-rata"].max()
+    youngest_cls = summary.loc[summary["Usia Rata-rata"] == summary["Usia Rata-rata"].min(), "Kelas Penyakit"].values[0]
+    youngest_avg = summary["Usia Rata-rata"].min()
+
+    status_tab3 = "seimbang" if ratio_tab3 >= 0.8 else "cukup seimbang" if ratio_tab3 >= 0.5 else "tidak seimbang"
+
+    st.info(f"""
 **Insight**
 
-248 gambar duplikat dihapus (0.52% dari 48.000 data awal) yang berisi 154 exact copy dan 94 label error.
-Tidak ditemukan train-val leakage. Stratified split 70/15/15 menghasilkan selisih proporsi < 1% per kelas.
+Dataset setelah filter memiliki **{len(df_f):,} pasien** di **{df_f['disease_name'].nunique()} kelas**.
+Kelas terbesar: **{largest_cls}** ({largest_n} data), terkecil: **{smallest_cls}** ({smallest_n} data) — rasio {ratio_tab3:.2f} ({status_tab3}).
+
+Distribusi usia: **{oldest_cls}** memiliki rata-rata usia tertinggi ({oldest_avg:.1f} thn), **{youngest_cls}** terendah ({youngest_avg:.1f} thn).
+Kelas **{widest_cls}** memiliki rentang usia paling lebar, mengindikasikan penyakit ini menyerang lintas kelompok umur.
+
+Proses cleaning: 248 duplikat dihapus (154 exact copy + 94 label error). Tidak ditemukan train-val leakage — stratified split 70/15/15 dengan selisih proporsi < 1% per kelas.
     """)
 
 # ── TAB 4 ────────────────────────────────────────────────────
