@@ -4,7 +4,7 @@ Dashboard interaktif untuk melakukan Exploratory Data Analysis (EDA) pada datase
 
 ## Live Demo
 
-[Tambahkan link deployment Streamlit Cloud di sini apabila tersedia.](https://skindiseases-capstone-project.streamlit.app/)
+(https://skindiseases-capstone-project.streamlit.app/)
 
 ---
 
