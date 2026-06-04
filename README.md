@@ -16,7 +16,7 @@ Key Solution: Building an image-based skin disease detection system capable of r
 ### 1. Image Data
 The dataset used is sourced from Kaggle: Skin Disease Detection Dataset by the publisher mgmitesh.
 * Total Classes: 15 skin disease classes (Acne, Actinic Keratosis, Basal Cell Carcinoma, Chickenpox, Dermato Fibroma, Dyshidrotic Eczema, Melanoma, Nail Fungus, Nevus, Normal Skin, Pigmented Benign Keratosis, Ringworm, Seborrheic Keratosis, Squamous Cell Carcinoma, Vascular Lesion).
-* Initial Data Volume: 47,997 images (46,130 train data and 1,867 validation data in the original structure).
+* Initial Data Volume: 48,162 images (46,334 train data and 1,828 validation data in the original structure).
 * Format: JPEG/JPG.
 
 ### 2. Clinical Metadata (metadata_penyakit_kulit.csv)
